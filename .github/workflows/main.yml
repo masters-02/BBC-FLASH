@@ -1,21 +1,30 @@
-name: News Update Bot
+name: BBC News Sinhala Bot
+
 on:
   schedule:
-    - cron: '*/30 * * * *' # සෑම විනාඩි 30කට වරක් ක්‍රියාත්මක වේ
-  workflow_dispatch:
+    # සෑම විනාඩි 30කට වරක් ක්‍රියාත්මක වේ (UTC Time)
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # අවශ්‍ය විටක manual run කිරීමට
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Checkout repository content
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.9'
+
       - name: Install dependencies
-        run: pip install feedparser requests
-      - name: Run Bot
+        run: |
+          python -m pip install --upgrade pip
+          pip install feedparser requests googletrans==4.0.0-rc1
+
+      - name: Execute Python script
         env:
           WHATSAPP_API_TOKEN: ${{ secrets.WHATSAPP_API_TOKEN }}
           WHATSAPP_CHANNEL: ${{ secrets.WHATSAPP_CHANNEL }}
