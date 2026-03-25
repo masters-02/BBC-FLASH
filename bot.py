@@ -6,7 +6,7 @@ from googletrans import Translator
 # Config
 RSS_FEED_URL = "http://feeds.bbci.co.uk/news/world/rss.xml"
 WHAPI_TOKEN = os.getenv('WHATSAPP_API_TOKEN')
-CHANNEL_ID = os.getenv('WHATSAPP_CHANNEL')
+CHANNEL_ID = os.getenv('94783703981')
 
 translator = Translator()
 
