@@ -1,0 +1,22 @@
+name: News Update Bot
+on:
+  schedule:
+    - cron: '*/30 * * * *' # සෑම විනාඩි 30කට වරක් ක්‍රියාත්මක වේ
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install feedparser requests
+      - name: Run Bot
+        env:
+          WHATSAPP_API_TOKEN: ${{ secrets.WHATSAPP_API_TOKEN }}
+          WHATSAPP_CHANNEL: ${{ secrets.WHATSAPP_CHANNEL }}
+        run: python bot.py
