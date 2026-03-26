@@ -1,4 +1,3 @@
-        return f"*{title}*\n\n{desc}"
 import requests
 import os
 import time
@@ -51,7 +50,7 @@ def translate_to_pure_sinhala(title, desc):
 
 def send_to_whatsapp(translated_text, link, img):
     url = "https://gate.whapi.cloud/messages/image"
-    caption = f"📢 *BBC FLASH*\n\n{translated_text}\n\n🔗 *සම්පූර්ණ පුවත කියවන්න:* {link}"
+    caption = f"📢 *ලෝක පුවත් සේවය*\n\n{translated_text}\n\n🔗 *සම්පූර්ණ පුවත කියවන්න:* {link}"
     
     payload = {
         "media": img, # නිවැරදි පින්තූරය මෙතැනින් යැවේ
