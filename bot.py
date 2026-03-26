@@ -1,16 +1,17 @@
 import requests
 import os
 import time
-from googletrans import Translator
+from deep_translator import GoogleTranslator # වඩාත් දියුණු පරිවර්තකයක්
 
 # --- CONFIGURATION ---
 GNEWS_API_KEY = "86f195de5c480015cafdc7ea88a7fbbe"
 CURRENTS_API_KEY = "jI57sNhl7dVvjajpjYBmgTQIM6MQzNgg-Zv12wPUXXPEFeng"
 WHAPI_TOKEN = os.getenv('WHATSAPP_API_TOKEN')
 CHANNEL_ID = os.getenv('WHATSAPP_CHANNEL')
-
 DB_FILE = "sent_news.txt"
-translator = Translator()
+
+# AI Translator එක සෙට් කිරීම
+translator = GoogleTranslator(source='en', target='si')
 
 def get_sent_urls():
     if not os.path.exists(DB_FILE): return []
@@ -22,16 +23,23 @@ def save_sent_url(url):
         f.write(url + "\n")
 
 def ai_translate(text):
+    if not text: return ""
     try:
-        # AI මාදිලිය මගින් වඩාත් ස්වභාවික සිංහලකට පරිවර්තනය කිරීම
-        result = translator.translate(text, src='en', dest='si').text
-        return result
-    except:
+        # අකුරු 5000ක් දක්වා එකවර ඉතා නිවැරදිව පරිවර්තනය කරයි
+        return translator.translate(text)
+    except Exception as e:
+        print(f"Translation Error: {e}")
         return text
 
 def send_to_whatsapp(title, body, link, img):
     url = "https://gate.whapi.cloud/messages/image"
-    caption = f"🔴 *BBC FLASH NEWS*\n\n📌 *{title}*\n\n📝 {body}\n\n🔗 *සම්පූර්ණ පුවත:* {link}"
+    # සාරාංශගත අන්තර්ගතය සහ Main Title එක පිරිසිදුව මෙතනින් සකස් වේ
+    caption = (
+        f"🔴 *{title}*\n\n"
+        f"📝 *පුවත් සාරාංශය:*\n{body}\n\n"
+        f"🔗 *සම්පූර්ණ විස්තරය කියවන්න:* {link}\n\n"
+        f"📢 *BBC FLASH 24/7 Updates*"
+    )
     payload = {"media": img, "to": CHANNEL_ID, "caption": caption}
     headers = {"authorization": f"Bearer {WHAPI_TOKEN}", "content-type": "application/json"}
     requests.post(url, json=payload, headers=headers)
@@ -60,7 +68,7 @@ count = 0
 
 for news in all_news:
     if news['url'] not in sent_list and count < 10:
-        # AI පරිවර්තනය
+        # ඉතා නිවැරදි AI පරිවර්තනය
         s_title = ai_translate(news['title'])
         s_desc = ai_translate(news['desc'])
         
@@ -68,6 +76,7 @@ for news in all_news:
         send_to_whatsapp(s_title, s_desc, news['url'], news['img'])
         save_sent_url(news['url'])
         count += 1
-        time.sleep(2) # Spam වැළැක්වීමට තත්පර 2ක විරාමයක්
+        time.sleep(3) # බ්ලොක් නොවී සිටීමට තත්පර 3ක විරාමයක්
 
-print(f"Uploaded {count} new articles.")
+print(f"Uploaded {count} high-quality news updates.")
+
