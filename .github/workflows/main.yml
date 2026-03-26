@@ -1,21 +1,19 @@
-name: Global News Sinhala Bot (High Quality)
+name: Global 2-Hour News Bot
 
 on:
   schedule:
-    # සෑම විනාඩි 60කට (පැයකට) වරක් ස්වයංක්‍රීයව ක්‍රියාත්මක වේ
-    - cron: '0 * * * *'
-  workflow_dispatch: # අවශ්‍ය ඕනෑම වෙලාවක manual run කිරීමට
+    # සෑම පැය 2කට වරක් ක්‍රියාත්මක වේ (UTC 0, 2, 4, 6...)
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-    
-    # වැදගත්: මෙය sent_news.txt එක update කර නැවත save කිරීමට අවශ්‍ය වේ
     permissions:
       contents: write
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup Python
@@ -26,18 +24,17 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests deep-translator
+          pip install requests google-generativeai
 
-      - name: Run Python Bot
+      - name: Run Bot
         env:
           WHATSAPP_API_TOKEN: ${{ secrets.WHATSAPP_API_TOKEN }}
           WHATSAPP_CHANNEL: ${{ secrets.WHATSAPP_CHANNEL }}
         run: python bot.py
 
-      - name: Commit and Push if Database Updated
+      - name: Save Sent News List
         run: |
-          git config --global user.name "GitHub Action Bot"
-          git config --global user.email "actions@github.com"
+          git config --global user.name "NewsBot"
+          git config --global user.email "bot@news.com"
           git add sent_news.txt
-          # වෙනසක් තිබේ නම් පමණක් commit කරයි
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update sent news list [skip ci]" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update DB [skip ci]" && git push)
