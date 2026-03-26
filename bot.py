@@ -1,58 +1,73 @@
 import requests
 import os
+import time
 from googletrans import Translator
 
 # --- CONFIGURATION ---
-NEWS_API_KEY = "29c4923713d0493ab21959fca5d18184" # ඔබ ලබා දුන් API Key එක
+GNEWS_API_KEY = "86f195de5c480015cafdc7ea88a7fbbe"
+CURRENTS_API_KEY = "jI57sNhl7dVvjajpjYBmgTQIM6MQzNgg-Zv12wPUXXPEFeng"
 WHAPI_TOKEN = os.getenv('WHATSAPP_API_TOKEN')
 CHANNEL_ID = os.getenv('WHATSAPP_CHANNEL')
 
+DB_FILE = "sent_news.txt"
 translator = Translator()
 
-def send_status_msg(text):
-    url = "https://gate.whapi.cloud/messages/text"
-    payload = {"to": CHANNEL_ID, "body": text}
+def get_sent_urls():
+    if not os.path.exists(DB_FILE): return []
+    with open(DB_FILE, "r") as f:
+        return f.read().splitlines()
+
+def save_sent_url(url):
+    with open(DB_FILE, "a") as f:
+        f.write(url + "\n")
+
+def ai_translate(text):
+    try:
+        # AI මාදිලිය මගින් වඩාත් ස්වභාවික සිංහලකට පරිවර්තනය කිරීම
+        result = translator.translate(text, src='en', dest='si').text
+        return result
+    except:
+        return text
+
+def send_to_whatsapp(title, body, link, img):
+    url = "https://gate.whapi.cloud/messages/image"
+    caption = f"🔴 *BBC FLASH NEWS*\n\n📌 *{title}*\n\n📝 {body}\n\n🔗 *සම්පූර්ණ පුවත:* {link}"
+    payload = {"media": img, "to": CHANNEL_ID, "caption": caption}
     headers = {"authorization": f"Bearer {WHAPI_TOKEN}", "content-type": "application/json"}
     requests.post(url, json=payload, headers=headers)
 
-def send_whatsapp_media(title_si, summary_si, link, image_url):
-    url = "https://gate.whapi.cloud/messages/image"
-    caption = f"🔴 *BBC Flash NEWS*\n\n📌 *{title_si}*\n\n📝 {summary_si}\n\n🔗 වැඩිදුර විස්තර: {link}"
-    payload = {"media": image_url, "to": CHANNEL_ID, "caption": caption}
-    headers = {"authorization": f"Bearer {WHAPI_TOKEN}", "content-type": "application/json"}
-    response = requests.post(url, json=payload, headers=headers)
-    print(f"WhatsApp Response: {response.status_code} - {response.text}")
+# පුවත් එකතු කිරීම
+all_news = []
 
-# 1. ආරම්භක පණිවිඩය
-send_status_msg("🔄 *News Update Soon...*")
+# 1. GNews (ප්‍රධාන පුවත් 5ක්)
+try:
+    gn_url = f"https://gnews.io/api/v4/top-headlines?category=general&lang=en&apikey={GNEWS_API_KEY}&max=5"
+    gn_data = requests.get(gn_url).json()
+    for art in gn_data.get('articles', []):
+        all_news.append({'title': art['title'], 'desc': art['description'], 'url': art['url'], 'img': art['image']})
+except: pass
 
-# 2. NewsAPI හරහා අලුත්ම පුවත් ලබා ගැනීම
-# bbc-news මූලාශ්‍රයෙන් අලුත්ම පුවත් ගෙන්වා ගැනීම
-news_url = f"https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey={NEWS_API_KEY}"
-response = requests.get(news_url)
-data = response.json()
+# 2. Currents API (තවත් පුවත් 5ක්)
+try:
+    cur_url = f"https://api.currentsapi.services/v1/latest-news?apiKey={CURRENTS_API_KEY}"
+    cur_data = requests.get(cur_url).json()
+    for art in cur_data.get('news', [])[:5]:
+        all_news.append({'title': art['title'], 'desc': art['description'], 'url': art['url'], 'img': art['image']})
+except: pass
 
-if data.get("status") == "ok" and data.get("articles"):
-    # පළමු පුවත තෝරා ගැනීම
-    article = data["articles"][0]
-    title_en = article.get("title")
-    summary_en = article.get("description")
-    link = article.get("url")
-    image_url = article.get("urlToImage")
+sent_list = get_sent_urls()
+count = 0
 
-    if not image_url:
-        image_url = "https://upload.wikimedia.org/wikipedia/commons/6/62/BBC_News_2019.svg"
-
-    try:
-        # 3. සිංහලට පරිවර්තනය (AI Translation)
-        title_si = translator.translate(title_en, src='en', dest='si').text
-        summary_si = translator.translate(summary_en, src='en', dest='si').text
+for news in all_news:
+    if news['url'] not in sent_list and count < 10:
+        # AI පරිවර්තනය
+        s_title = ai_translate(news['title'])
+        s_desc = ai_translate(news['desc'])
         
-        # 4. WhatsApp වෙත යැවීම
-        send_whatsapp_media(title_si, summary_si, link, image_url)
-        print("Success: News sent successfully!")
-        
-    except Exception as e:
-        print(f"Translation Error: {e}")
-else:
-    print(f"Error fetching news: {data.get('message')}")
+        # WhatsApp යැවීම
+        send_to_whatsapp(s_title, s_desc, news['url'], news['img'])
+        save_sent_url(news['url'])
+        count += 1
+        time.sleep(2) # Spam වැළැක්වීමට තත්පර 2ක විරාමයක්
+
+print(f"Uploaded {count} new articles.")
