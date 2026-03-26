@@ -1,12 +1,4 @@
         return f"*{title}*\n\n{desc}"
-
-def send_to_whatsapp(content, link, img):
-    url = "https://gate.whapi.cloud/messages/image"
-    caption = f"📢 *ලෝක පුවත් සේවය*\n\n{content}\n\n🔗 *සම්පූර්ණ පුවත කියවන්න:* {link}"
-    payload = {"media": img, "to": CHANNEL_ID, "caption": caption}
-    headers = {"authorization": f"Bearer {WHAPI_TOKEN}", "content-type": "application/json"}
-    requests.post(url, json=payload, headers=headers)
-
 import requests
 import os
 import time
