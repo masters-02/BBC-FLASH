@@ -1,17 +1,18 @@
-name: BBC News Sinhala Bot (NewsAPI Version)
+name: Global News Sinhala Bot
 
 on:
   schedule:
-    # සෑම විනාඩි 30කට වරක් ස්වයංක්‍රීයව ක්‍රියාත්මක වේ
-    - cron: '*/30 * * * *'
-  workflow_dispatch: # ඔබට අවශ්‍ය ඕනෑම වෙලාවක "Run workflow" එබිය හැක
+    - cron: '0 * * * *' # සෑම පැයකටම වරක්
+  workflow_dispatch:
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # වැදගත්: මෙය Database එක update කිරීමට අවශ්‍යයි
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup Python
@@ -20,13 +21,18 @@ jobs:
           python-version: '3.9'
 
       - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests googletrans==4.0.0-rc1
+        run: pip install requests googletrans==4.0.0-rc1
 
-      - name: Run Python Bot
+      - name: Run Bot
         env:
-          # GitHub Secrets හරහා ලබා දෙන අගයන්
           WHATSAPP_API_TOKEN: ${{ secrets.WHATSAPP_API_TOKEN }}
           WHATSAPP_CHANNEL: ${{ secrets.WHATSAPP_CHANNEL }}
         run: python bot.py
+
+      - name: Commit Database Update
+        run: |
+          git config --global user.name "NewsBot"
+          git config --global user.email "bot@news.com"
+          git add sent_news.txt
+          git commit -m "Update sent news list" || exit 0
+          git push
