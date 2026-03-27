@@ -2,8 +2,8 @@ name: BBC Flash Auto News Editor & Uploader
 
 on:
   schedule:
-    - cron: '0 */2 * * *' # සෑම පැය 2කට වරක් ස්වයංක්‍රීයව ක්‍රියාත්මක වේ
-  workflow_dispatch: # ඔබට අවශ්‍ය ඕනෑම වෙලාවක manual run කිරීමට
+    - cron: '0 */2 * * *' 
+  workflow_dispatch: 
 
 jobs:
   build-and-deploy:
@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: administrations/setup-python@v5
+        uses: actions/setup-python@v5  # මෙතන 'actions' කියලා තියෙන්න ඕනේ
         with:
           python-version: '3.10'
 
@@ -27,7 +27,6 @@ jobs:
 
       - name: Run News Bot System
         env:
-          # GitHub Secrets වල මේවා අනිවාර්යයෙන්ම add කර තිබිය යුතුය
           WHATSAPP_API_TOKEN: ${{ secrets.WHATSAPP_API_TOKEN }}
           WHATSAPP_CHANNEL: ${{ secrets.WHATSAPP_CHANNEL }}
         run: python bot.py
@@ -37,5 +36,4 @@ jobs:
           git config --global user.name "BBC-Flash-Bot"
           git config --global user.email "bot@bbcflash.com"
           git add sent_news.txt
-          # වෙනසක් ඇත්නම් පමණක් commit කර push කරයි
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update sent news list [skip ci]" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update news database [skip ci]" && git push)
