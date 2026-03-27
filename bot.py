@@ -15,7 +15,7 @@ CHANNEL_ID = os.getenv('WHATSAPP_CHANNEL')
 DB_FILE = "sent_news.txt"
 
 # --- අකුරු විලාසය (Font) ඩවුන්ලෝඩ් කිරීම ---
-FONT_URL = "https://github.com/google/fonts/raw/main/ofl/playfairdisplay/PlayfairDisplay-Bold.ttf"
+FONT_URL = "https://github.com/google/fonts/raw/main/ofl/playfairdisplay/static/PlayfairDisplay-Bold.ttf"
 FONT_PATH = "PlayfairDisplay-Bold.ttf"
 if not os.path.exists(FONT_PATH):
     urllib.request.urlretrieve(FONT_URL, FONT_PATH)
