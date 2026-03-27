@@ -1,40 +1,39 @@
-name: Global 2-Hour News Bot
+name: BBC Flash Auto News Editor & Uploader
 
 on:
   schedule:
-    # සෑම පැය 2කට වරක් ක්‍රියාත්මක වේ (UTC 0, 2, 4, 6...)
-    - cron: '0 */2 * * *'
-  workflow_dispatch:
+    - cron: '0 */2 * * *' # සෑම පැය 2කට වරක්
+  workflow_dispatch: # ඕනෑම වෙලාවක Run කිරීමට
 
 jobs:
-  run-bot:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests google-generativeai
+          pip install requests Pillow
 
-      - name: Run Bot
+      - name: Run News Bot System
         env:
           WHATSAPP_API_TOKEN: ${{ secrets.WHATSAPP_API_TOKEN }}
           WHATSAPP_CHANNEL: ${{ secrets.WHATSAPP_CHANNEL }}
         run: python bot.py
 
-      - name: Save Sent News List
+      - name: Save Database
         run: |
-          git config --global user.name "NewsBot"
-          git config --global user.email "bot@news.com"
+          git config --global user.name "BBC Flash Bot"
+          git config --global user.email "bot@bbcflash.com"
           git add sent_news.txt
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update DB [skip ci]" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto Update Database [skip ci]" && git push)
